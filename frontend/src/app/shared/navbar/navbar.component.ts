@@ -4,6 +4,7 @@ import {Router} from '@angular/router';
 import {Location} from '@angular/common';
 import {SocketService} from '../../service/socket.service';
 import {Socket} from 'ngx-socket-io';
+import {UserService} from '../../service/user.service';
 
 @Component({
   moduleId: module.id,
@@ -26,6 +27,7 @@ export class NavbarComponent implements OnInit {
               private element: ElementRef,
               private router: Router,
               private socketService: SocketService,
+              private userService: UserService,
               private socket: Socket) {
     this.location = location;
     this.nativeElement = element.nativeElement;
@@ -35,10 +37,6 @@ export class NavbarComponent implements OnInit {
   ngOnInit() {
     this.listTitles = ROUTES.filter(listTitle => listTitle);
     const soc = this.socketService.newconnection();
-    this.socketService.popupUser(soc, (data) => {
-      console.log('data', data);
-      this.users = data;
-    });
     var navbar: HTMLElement = this.element.nativeElement;
     this.toggleButton = navbar.getElementsByClassName('navbar-toggle')[0];
     this.router.events.subscribe((event) => {
@@ -111,11 +109,13 @@ export class NavbarComponent implements OnInit {
 
   onLogout() {
     const that = this;
-    this.socketService.logoutUser(this.users, function (res) {
-      console.log('res', res);
-      localStorage.clear();
-      that.router.navigate(['/login']);
-    })
+    this.userService.logoutUser(localStorage.getItem('userName'))
+      .subscribe((res) => {
+        console.log('res', res);
+        localStorage.clear();
+        that.router.navigate(['/login']);
+      }, (err) => {
+      });
   }
 
 }

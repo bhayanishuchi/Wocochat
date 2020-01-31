@@ -151,10 +151,10 @@ io.on('connection', function (socket) {
   });
   setTimeout(sendHeartbeat, 10000);
 
-  socket.on('new user', function (data, callback) {
+  /*socket.on('new user', function (data, callback) {
     middleware.newUserLogin(socket, data, callback)
-  });
-  socket.on('getOnlineUser', function (name, callback) {
+  });*/
+  /*socket.on('getOnlineUser', function (name, callback) {
     middleware.listofalluser(name, callback)
   });
   socket.on('find message', function (name) {
@@ -165,7 +165,7 @@ io.on('connection', function (socket) {
   });
   socket.on('sendMessage', function (data, callback) {
     middleware.sendingMessage(socket, data, callback)
-  });
+  });*/
 
   function sendHeartbeat() {
     setTimeout(sendHeartbeat, 10000);

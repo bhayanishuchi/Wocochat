@@ -39,4 +39,8 @@ export class UserService {
   sendMessage(body) {
     return this.http.post<any>(this.api + '/user/chat/sendmessages', body);
   }
+
+  logoutUser(userName) {
+    return this.http.get<any>(this.api + '/user/logout/' + userName);
+  }
 }

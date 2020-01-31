@@ -12,6 +12,8 @@ module.exports.setRouter = (app) => {
 
   app.post('/user/login', [usercontroller.loginUser]);
 
+  app.get('/user/logout/:userName', [usercontroller.logout]);
+
   app.post('/user/createcontact', middleware.isAuthorize, [usercontroller.createcontact]);
 
   app.get('/user/contactbook/:userId', middleware.isAuthorize, [usercontroller.contactbook]);

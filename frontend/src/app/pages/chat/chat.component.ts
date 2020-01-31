@@ -4,6 +4,7 @@ import {UserService} from '../../service/user.service';
 import {Router} from '@angular/router';
 import {SocketService} from '../../service/socket.service';
 import {Socket} from 'ngx-socket-io';
+import {not} from 'rxjs/internal-compatibility';
 
 @Component({
   selector: 'app-chat',
@@ -17,7 +18,7 @@ export class ChatComponent implements OnInit {
   userId;
   totalFriend;
   users: any = [];
-  selectUser;
+  selectUser:any = '';
   msgval;
   chatList: any = [];
   userName;
@@ -33,26 +34,16 @@ export class ChatComponent implements OnInit {
 
   ngOnInit() {
     const accessToken = localStorage.getItem('token');
-    const soc = this.socketService.newconnection();
     this.userId = localStorage.getItem('user_id');
     this.userName = localStorage.getItem('userName');
-    /*this.socketService.popupUser(soc, (data) => {
-      console.log('data', data);
-      this.userName = data[1];
-      (data[0]).forEach((x) => {
-        (this.users).forEach((y, i) => {
-          if (x.toString() === (y.userName).toString()) {
-            this.users[i].status = true;
-          }
-        });
-      });
-    });
-    this.socketService.getOnlineUserList(userName, (data) => {
-      console.log('getOnlineUserList data', data);
-      this.users = [];
-      data.forEach((x) => {
-        this.users.push({userName: x.userName, status: false});
-      });
+    if (!accessToken) {
+      this.router.navigate(['/login']);
+    }
+
+    const socket = this.socketService.newconnection();
+    this.socketService.connectionIsAlive(socket);
+    this.socketService.yesConnectionIsAlive(socket, function (data) {
+      // console.log('yes Connection Is Alive data', data)
     });
 
     this.socketService.loadMessage((loadMessages) => {
@@ -61,10 +52,17 @@ export class ChatComponent implements OnInit {
 
     this.socketService.notification((notificationMessage) => {
       console.log('notificationMessage data', notificationMessage);
-    });*/
-    if (!accessToken) {
-      this.router.navigate(['/login']);
-    }
+      this.notify.showInfo(notificationMessage[0] + ' from ' + notificationMessage[1]);
+      if (notificationMessage[1].toString() !== this.selectUser.toString()) {
+        (this.users).forEach((x) => {
+          if (x.userName.toString() === notificationMessage[1].toString()) {
+            x.message = notificationMessage[2].toString();
+            x.Date = this.formatDate(new Date());
+          }
+        });
+      }
+    });
+
     this.getAllUserApi();
   }
 
@@ -73,31 +71,52 @@ export class ChatComponent implements OnInit {
       .subscribe((data) => {
         this.totalFriend = data.length;
         (data).forEach((x) => {
-          this.users.push(x.userName);
+          this.users.push({userName: x.userName, message: '', Date: ''});
+          this.getLastMessage(x.userName);
         });
       }, (err) => {
         console.log('err', err);
       });
   }
 
+  getLastMessage(userName) {
+    this.userService.findMessage(this.userName, userName)
+      .subscribe((res) => {
+        if (res.length > 0) {
+          (this.users).forEach((x) => {
+            if (x.userName.toString() === userName.toString()) {
+              x.message = res[res.length - 1].msg;
+              x.Date = res[res.length - 1].date;
+            }
+          });
+        }
+      });
+  }
+
   selectedUserApi(user) {
-    console.log('selected user', user);
-    this.selectUser = user;
+    console.log('selected user', user.userName);
+    this.selectUser = user.userName;
     this.showChat = true;
     const that = this;
-    this.userService.findMessage(this.userName, user)
+    this.userService.findMessage(this.userName, user.userName)
       .subscribe((res) => {
         console.log('findMessage data', res);
         (res).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        (res).forEach((x)=>{
-          if(x.nick.toString() === this.userName.toString()){
+        (res).forEach((x) => {
+          if (x.nick.toString() === this.userName.toString()) {
             x.flag = false;
-          }else{
+          } else {
             x.flag = true;
           }
-        })
+        });
         that.msg = [];
         that.msg = res;
+        (this.users).forEach((x) => {
+          if (x.userName.toString() === this.selectUser.toString()) {
+            console.log(res[res.length], res.length);
+            x.message = res[res.length - 1].msg;
+          }
+        });
         console.log('msg', that.msg);
       }, (err) => {
       });
@@ -107,16 +126,16 @@ export class ChatComponent implements OnInit {
     const that = this;
     const str = '/w ' + this.selectUser + ' ' + this.msgval;
     console.log('send message', str);
-    const currentDate = new Date().toLocaleString();
+    const currentDate = new Date();
     if ((this.msgval).length > 0) {
-      let body = {
-        msg:this.msgval,
-        to:this.selectUser,
-        userName:this.userName,
-        currentDate:currentDate,
+      const body = {
+        msg: this.msgval,
+        to: this.selectUser,
+        userName: this.userName,
+        currentDate: currentDate,
         date: that.formatDate(currentDate),
         time: that.formatTime(currentDate),
-      }
+      };
       this.userService.sendMessage(body)
         .subscribe((res) => {
           console.log('resssssss', res);
@@ -128,18 +147,12 @@ export class ChatComponent implements OnInit {
             time: that.formatTime(currentDate),
           };
           this.msg.push(data);
-          console.log('this.msg', this.msg);
-          data['nick'] = this.selectUser;
-          console.log('this.chatList', this.chatList);
-          (this.chatList).filter((x) => {
-            if (x.nick === this.selectUser) {
-              that.chatList[(that.chatList).indexOf(x)].msg = data.msg;
-              that.chatList[(that.chatList).indexOf(x)].date = data.date;
-              that.chatList[(that.chatList).indexOf(x)].time = data.time;
-              that.array_move(this.chatList, (this.chatList).indexOf(x), 0);
+          (this.users).forEach((x) => {
+            if (x.userName.toString() === this.selectUser.toString()) {
+              console.log(res[res.length], res.length);
+              x.message = data.msg;
             }
           });
-          console.log('chatlist', this.chatList);
         }, (err) => {
           that.notify.showError(err);
         });
@@ -159,7 +172,7 @@ export class ChatComponent implements OnInit {
   }
 
   formatDate(date) {
-    date = new Date(date);
+    // date = new Date(date);
     const monthNames = [
       'January', 'February', 'March',
       'April', 'May', 'June', 'July',

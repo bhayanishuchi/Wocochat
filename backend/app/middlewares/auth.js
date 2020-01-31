@@ -330,11 +330,9 @@ let sendingMessage = (socket, newData, callback) => {
           if (err) throw err;
         })
       }
-
     } else {
       callback('Error! Please Enter a message for your whisper')
     }
-
   }
 };
 

@@ -11,6 +11,46 @@ const ChatMessages = mongoose.model('ChatMessages');
 const tokenCol = mongoose.model('tokenCollection');
 const ContactBook = mongoose.model('ContactBook');
 
+let allUser = {};
+
+const setUserPetName = function (req) {
+  console.log('==== update Socket start ==== ');
+  console.log('setUserPetName ');
+  const socket = req.app.io;
+  return new Promise((resolve, reject) => {
+    if (socket !== undefined) {
+      if (allUser[req.body.userName] === undefined) {
+        allUser[req.body.userName] = req.app.socket.id;
+      }
+      console.log('allUser', allUser);
+      socket.userName = req.body.userName;
+      resolve();
+    }
+  })
+};
+
+const notifyUser = function (req) {
+  console.log('notifyUser ');
+  const socket = req.app.io;
+  return new Promise((resolve, reject) => {
+    if (socket !== undefined) {
+      console.log('sseeeeee', allUser[req.body.to]);
+      socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+      resolve();
+    }
+  })
+};
+
+const logout = function (req, res) {
+  console.log('notifyUser ');
+  const socket = req.app.io;
+  if (socket !== undefined) {
+    delete allUser[req.params.userName]
+  }
+  res.status(200).send()
+};
+
+
 let createUser = (req, res) => {
 
   let validatingInputs = () => {
@@ -233,7 +273,11 @@ let loginUser = (req, res) => {
   validatingInputs()
     .then(checkUser)
     .then((resolve) => {
-      res.status(200).send(resolve);
+      Promise.all([setUserPetName(req)])
+        .then((data) => {
+          res.status(200).send(resolve);
+        });
+
     })
     .catch((err) => {
       console.log(err);
@@ -555,8 +599,8 @@ let sendMessage = (req, res) => {
     });
   }; // end of checkUser
 
-  let getAllMessage = () => {
-    console.log("getAllMessage");
+  let messageSend = () => {
+    console.log("messageSend");
     return new Promise((resolve, reject) => {
       let body = {
         msg: req.body.msg,
@@ -582,9 +626,12 @@ let sendMessage = (req, res) => {
 
   validatingInputs()
     .then(checkUser)
-    .then(getAllMessage)
+    .then(messageSend)
     .then((resolve) => {
-      res.status(200).send(resolve);
+      Promise.all([notifyUser(req)])
+        .then((data) => {
+          res.status(200).send(resolve);
+        })
     })
     .catch((err) => {
       res.status(err.status).send(err);
@@ -594,6 +641,7 @@ let sendMessage = (req, res) => {
 module.exports = {
   createUser: createUser,
   loginUser: loginUser,
+  logout: logout,
   createcontact: createcontact,
   contactbook: contactbook,
   allUsers: allUsers,
