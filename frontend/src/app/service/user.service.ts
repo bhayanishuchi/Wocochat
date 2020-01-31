@@ -32,7 +32,11 @@ export class UserService {
     return this.http.get<any>(this.api + '/user/chat/users/' + userId);
   }
 
-  findMessage(userName) {
-    return this.http.get<any>(this.api + '/user/chat/messages/' + userName);
+  findMessage(userName, toName) {
+    return this.http.get<any>(this.api + '/user/chat/messages/' + userName + '/' + toName);
+  }
+
+  sendMessage(body) {
+    return this.http.post<any>(this.api + '/user/chat/sendmessages', body);
   }
 }

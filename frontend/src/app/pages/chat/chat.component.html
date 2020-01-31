@@ -25,7 +25,7 @@
           </div>
         </div>-->
         <div class="chat_list" *ngFor="let user of users">
-          <div class="chat_people" (click)="selectedUser(user)">
+          <div class="chat_people" (click)="selectedUserApi(user)">
             <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="{{user}}"> </div>
             <div class="chat_ib">
               <h5>{{user}}<span class="chat_date">Dec 25</span></h5>

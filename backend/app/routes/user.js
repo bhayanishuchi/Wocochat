@@ -18,4 +18,8 @@ module.exports.setRouter = (app) => {
 
   app.get('/user/chat/users/:userId', middleware.isAuthorize, [usercontroller.allUsers]);
 
+  app.get('/user/chat/messages/:userName/:toName', middleware.isAuthorize, [usercontroller.userMessage]);
+
+  app.post('/user/chat/sendmessages', middleware.isAuthorize, [usercontroller.sendMessage]);
+
 };

@@ -7,6 +7,7 @@ const tokenLib = require('../libs/tokenLib');
 const Promise = require('bluebird');
 
 const User = mongoose.model('User');
+const ChatMessages = mongoose.model('ChatMessages');
 const tokenCol = mongoose.model('tokenCollection');
 const ContactBook = mongoose.model('ContactBook');
 
@@ -456,10 +457,146 @@ let allUsers = (req, res) => {
     });
 };
 
+let userMessage = (req, res) => {
+
+  let validatingInputs = () => {
+    console.log("validatingInputs");
+    return new Promise((resolve, reject) => {
+      if (req.params.userName && req.params.toName) {
+        resolve();
+      } else {
+        let apiResponse = response.generate(true, "Required Parameter userName or toName is missing", 400, null);
+        reject(apiResponse);
+      }
+    });
+  }; // end of validatingInputs
+
+  let checkUser = () => {
+    console.log("checkUser");
+    return new Promise((resolve, reject) => {
+      User.find({userName: req.params.userName}, function (err, userDetail) {
+        if (err) {
+          logger.error("Internal Server error while fetching user", "createcontact => checkUser()", 5);
+          let apiResponse = response.generate(true, err, 500, null);
+          reject(apiResponse);
+        } else if (check.isEmpty(userDetail)) {
+          logger.error("User does not Exists", "createcontact => checkUser()", 5);
+          let apiResponse = response.generate(true, "User does not Exists with this userName", 401, null);
+          reject(apiResponse);
+        } else {
+          resolve();
+        }
+      })
+    });
+  }; // end of checkUser
+
+  let getAllMessage = () => {
+    console.log("getAllMessage");
+    return new Promise((resolve, reject) => {
+      ChatMessages.find({$or: [{$and: [{nick: req.params.userName}, {to: req.params.toName}]}, {$and: [{nick: req.params.toName}, {to: req.params.userName}]}]}, function (err, userMessage) {
+        if (err) {
+          logger.error("Internal Server error while create User", "createcontact => getContact()", 5);
+          let apiResponse = response.generate(true, err, 500, null);
+          reject(apiResponse);
+        } else {
+          resolve(userMessage);
+        }
+      })
+    });
+  }; // end of addUser
+
+  validatingInputs()
+    .then(checkUser)
+    .then(getAllMessage)
+    .then((resolve) => {
+      res.status(200).send(resolve);
+    })
+    .catch((err) => {
+      res.status(err.status).send(err);
+    });
+};
+
+let sendMessage = (req, res) => {
+
+  let validatingInputs = () => {
+    console.log("validatingInputs");
+    return new Promise((resolve, reject) => {
+      if (req.body.msg && req.body.to && req.body.userName && req.body.currentDate && req.body.time && req.body.date) {
+        resolve();
+      } else {
+        let apiResponse = response.generate(true, "Required Parameter msg or to or userName or currentDate or date or time is missing", 400, null);
+        reject(apiResponse);
+      }
+    });
+  }; // end of validatingInputs
+
+  let checkUser = () => {
+    console.log("checkUser");
+    return new Promise((resolve, reject) => {
+      User.find({userName: {"$in": [req.body.to, req.body.userName]}}, function (err, userDetail) {
+        if (err) {
+          logger.error("Internal Server error while fetching user", "createcontact => checkUser()", 5);
+          let apiResponse = response.generate(true, err, 500, null);
+          reject(apiResponse);
+        } else if (check.isEmpty(userDetail)) {
+          logger.error("User does not Exists", "createcontact => checkUser()", 5);
+          let apiResponse = response.generate(true, "User does not Exists with this userName", 401, null);
+          reject(apiResponse);
+        } else {
+          if (userDetail.length !== 2) {
+            logger.error("User does not Exists", "createcontact => checkUser()", 5);
+            let apiResponse = response.generate(true, "User does not Exists with this userName", 401, null);
+            reject(apiResponse);
+          } else {
+            resolve();
+          }
+        }
+      })
+    });
+  }; // end of checkUser
+
+  let getAllMessage = () => {
+    console.log("getAllMessage");
+    return new Promise((resolve, reject) => {
+      let body = {
+        msg: req.body.msg,
+        nick: req.body.userName,
+        date: req.body.date,
+        time: req.body.time,
+        to: req.body.to,
+        created: req.body.currentDate,
+        offline: false,
+        counter: 0
+      }
+      ChatMessages.create(body, function (err, messageResult) {
+        if (err) {
+          logger.error("Internal Server error while create User", "createcontact => getContact()", 5);
+          let apiResponse = response.generate(true, err, 500, null);
+          reject(apiResponse);
+        } else {
+          resolve(messageResult);
+        }
+      })
+    });
+  }; // end of addUser
+
+  validatingInputs()
+    .then(checkUser)
+    .then(getAllMessage)
+    .then((resolve) => {
+      res.status(200).send(resolve);
+    })
+    .catch((err) => {
+      res.status(err.status).send(err);
+    });
+};
+
 module.exports = {
   createUser: createUser,
   loginUser: loginUser,
   createcontact: createcontact,
   contactbook: contactbook,
   allUsers: allUsers,
+  userMessage: userMessage,
+  sendMessage: sendMessage,
 };

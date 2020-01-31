@@ -19,8 +19,8 @@ export class ChatComponent implements OnInit {
   users: any = [];
   selectUser;
   msgval;
-  chatList;
-  username;
+  chatList: any = [];
+  userName;
   showChat = false;
   msg: any = [];
 
@@ -35,10 +35,10 @@ export class ChatComponent implements OnInit {
     const accessToken = localStorage.getItem('token');
     const soc = this.socketService.newconnection();
     this.userId = localStorage.getItem('user_id');
-    const userName = localStorage.getItem('userName');
+    this.userName = localStorage.getItem('userName');
     /*this.socketService.popupUser(soc, (data) => {
       console.log('data', data);
-      this.username = data[1];
+      this.userName = data[1];
       (data[0]).forEach((x) => {
         (this.users).forEach((y, i) => {
           if (x.toString() === (y.userName).toString()) {
@@ -85,12 +85,20 @@ export class ChatComponent implements OnInit {
     this.selectUser = user;
     this.showChat = true;
     const that = this;
-    this.userService.findMessage(user)
+    this.userService.findMessage(this.userName, user)
       .subscribe((res) => {
         console.log('findMessage data', res);
-        // (data[1]).sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+        (res).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        (res).forEach((x)=>{
+          if(x.nick.toString() === this.userName.toString()){
+            x.flag = false;
+          }else{
+            x.flag = true;
+          }
+        })
         that.msg = [];
-        // that.msg = data[1];
+        that.msg = res;
+        console.log('msg', that.msg);
       }, (err) => {
       });
   }
@@ -101,29 +109,40 @@ export class ChatComponent implements OnInit {
     console.log('send message', str);
     const currentDate = new Date().toLocaleString();
     if ((this.msgval).length > 0) {
-      this.socketService.sendMessage(str, currentDate, function (err) {
-        if (err) {
-          that.notify.showError(err);
-        }
-      });
-      const data = {
-        msg: this.msgval,
-        nick: this.username,
-        flag: false,
+      let body = {
+        msg:this.msgval,
+        to:this.selectUser,
+        userName:this.userName,
+        currentDate:currentDate,
         date: that.formatDate(currentDate),
         time: that.formatTime(currentDate),
-      };
-      this.msg.push(data);
-      data['nick'] = this.selectUser;
-      (this.chatList).filter((x) => {
-        if (x.nick === this.selectUser) {
-          that.chatList[(that.chatList).indexOf(x)].msg = data.msg;
-          that.chatList[(that.chatList).indexOf(x)].date = data.date;
-          that.chatList[(that.chatList).indexOf(x)].time = data.time;
-          that.array_move(this.chatList, (this.chatList).indexOf(x), 0);
-        }
-      });
-      console.log('chatlist', this.chatList);
+      }
+      this.userService.sendMessage(body)
+        .subscribe((res) => {
+          console.log('resssssss', res);
+          const data = {
+            msg: res.msg,
+            nick: this.userName,
+            flag: false,
+            date: that.formatDate(currentDate),
+            time: that.formatTime(currentDate),
+          };
+          this.msg.push(data);
+          console.log('this.msg', this.msg);
+          data['nick'] = this.selectUser;
+          console.log('this.chatList', this.chatList);
+          (this.chatList).filter((x) => {
+            if (x.nick === this.selectUser) {
+              that.chatList[(that.chatList).indexOf(x)].msg = data.msg;
+              that.chatList[(that.chatList).indexOf(x)].date = data.date;
+              that.chatList[(that.chatList).indexOf(x)].time = data.time;
+              that.array_move(this.chatList, (this.chatList).indexOf(x), 0);
+            }
+          });
+          console.log('chatlist', this.chatList);
+        }, (err) => {
+          that.notify.showError(err);
+        });
     }
     this.msgval = '';
   }
