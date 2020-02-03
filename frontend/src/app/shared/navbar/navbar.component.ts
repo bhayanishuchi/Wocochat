@@ -19,6 +19,7 @@ export class NavbarComponent implements OnInit {
   private toggleButton;
   private sidebarVisible: boolean;
   users: any = [];
+  logInUser: any = '';
   public isCollapsed = true;
   @ViewChild('navbar-cmp', {static: false}) button;
 
@@ -35,6 +36,7 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     this.listTitles = ROUTES.filter(listTitle => listTitle);
+    this.logInUser = localStorage.getItem('userName');
     var navbar: HTMLElement = this.element.nativeElement;
     this.toggleButton = navbar.getElementsByClassName('navbar-toggle')[0];
     this.router.events.subscribe((event) => {
