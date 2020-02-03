@@ -11,26 +11,21 @@ const ChatMessages = mongoose.model('ChatMessages');
 const tokenCol = mongoose.model('tokenCollection');
 const ContactBook = mongoose.model('ContactBook');
 
-const setUserPetName = function (req) {
+let allUser = {};
+let socketUser = {};
+
+const setUserPetName = function (req, userDetails) {
   console.log('==== update Socket start ==== ');
   console.log('setUserPetName ');
-  const socket = req.app.socket;
-  console.log('==============================');
-  console.log(socket.userName, req.app.socket.id);
-  console.log('==============================');
   const socketApp = req.app.io;
   return new Promise((resolve, reject) => {
-    if (socket) {
-      socket.userName = req.body.userName;
-      socketUser[req.body.userName] = socket;
-    }
     if (socketApp !== undefined) {
-      if (allUser[req.body.userName] === undefined) {
-        allUser[req.body.userName] = req.app.socket.id;
+      if (allUser[(userDetails[0].userName).toLowerCase()] === undefined) {
+        allUser[(userDetails[0].userName).toLowerCase()] = req.app.socket.id;
       }
-      socketApp.userName = req.body.userName;
-      resolve();
     }
+    console.log('allUser', allUser);
+    resolve();
   })
 };
 
@@ -39,11 +34,9 @@ const notifyUser = function (req) {
   const socket = req.app.io;
   return new Promise((resolve, reject) => {
     if (socket !== undefined) {
-      console.log('sseeeeee', socket[req.body.to]);
-      if (socket.to(req.body.to)) {
-        // socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
-        socket.to(req.body.to).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
-      }
+      let name = (req.body.to).toLowerCase();
+      socket.to(allUser[name]).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+      // socket.to((req.body.to).toLowerCase()).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
       resolve();
     }
   })
@@ -282,11 +275,7 @@ let loginUser = (req, res) => {
   validatingInputs()
     .then(checkUser)
     .then((resolve) => {
-      // Promise.all([setUserPetName(req)])
-        // .then((data) => {
-          res.status(200).send(resolve);
-        // });
-
+      res.status(200).send(resolve);
     })
     .catch((err) => {
       console.log(err);
@@ -411,13 +400,13 @@ let contactbook = (req, res) => {
           let apiResponse = response.generate(true, "User does not Exists with this userName", 401, null);
           reject(apiResponse);
         } else {
-          resolve();
+          resolve(userDetail);
         }
       })
     });
   }; // end of checkUser
 
-  let getContact = () => {
+  let getContact = (userDetail) => {
     console.log("getContact");
     return new Promise((resolve, reject) => {
       ContactBook.findOne({userId: req.params.userId}, function (err, ContactBookData) {
@@ -426,7 +415,7 @@ let contactbook = (req, res) => {
           let apiResponse = response.generate(true, err, 500, null);
           reject(apiResponse);
         } else {
-          resolve(ContactBookData);
+          resolve([userDetail, ContactBookData]);
         }
       })
     });
@@ -436,8 +425,12 @@ let contactbook = (req, res) => {
     .then(checkUser)
     .then(getContact)
     .then((resolve) => {
-      let apiResponse = response.generate(true, "Get contact book of user successfully", 200, resolve);
-      res.send(apiResponse);
+      Promise.all([setUserPetName(req, resolve[0])])
+        .then(()=>{
+          let apiResponse = response.generate(true, "Get contact book of user successfully", 200, resolve[1]);
+          res.send(apiResponse);
+        });
+
     })
     .catch((err) => {
       res.status(err.status).send(err);

@@ -16,7 +16,7 @@ module.exports.setRouter = (app) => {
 
   app.post('/user/createcontact', middleware.isAuthorize, [usercontroller.createcontact]);
 
-  app.get('/user/contactbook/:userId', middleware.isAuthorize, middleware.joinRoom, [usercontroller.contactbook]);
+  app.get('/user/contactbook/:userId', middleware.isAuthorize, [usercontroller.contactbook]);
 
   app.get('/user/chat/users/:userId', middleware.isAuthorize, [usercontroller.allUsers]);
 
