@@ -16,14 +16,15 @@ import {not} from 'rxjs/internal-compatibility';
 export class ChatComponent implements OnInit {
 
   userId;
-  totalFriend;
+  totalFriend: any = 0;
   users: any = [];
   selectUser: any = '';
+  searchText: any = '';
   msgval;
-  chatList: any = [];
   userName;
   showChat = false;
   msg: any = [];
+
 
   constructor(private notify: NotificationService,
               private userService: UserService,
@@ -40,10 +41,8 @@ export class ChatComponent implements OnInit {
       this.router.navigate(['/login']);
     }
 
-    const socket = this.socketService.newconnection();
-    this.socketService.connectionIsAlive(socket);
-    this.socketService.yesConnectionIsAlive(socket, function (data) {
-      // console.log('yes Connection Is Alive data', data)
+    this.socketService.connectionIsAlive(this.socket);
+    this.socketService.yesConnectionIsAlive(this.socket, function (data) {
     });
 
     this.socketService.loadMessage((loadMessages) => {
@@ -54,10 +53,12 @@ export class ChatComponent implements OnInit {
       console.log('notificationMessage data', notificationMessage);
       this.notify.showInfo(notificationMessage[0] + ' from ' + notificationMessage[1]);
       if (notificationMessage[1].toString() !== this.selectUser.toString()) {
-        (this.users).forEach((x) => {
+        (this.users).forEach((x, i) => {
           if (x.userName.toString() === notificationMessage[1].toString()) {
             x.message = notificationMessage[2].toString();
             x.Date = this.formatDate(new Date());
+            x.counter++;
+            this.array_move(this.users, i, 0);
           }
         });
       }
@@ -72,7 +73,7 @@ export class ChatComponent implements OnInit {
         if (res.data) {
           this.totalFriend = res.data.length;
           (res.data).forEach((x) => {
-            this.users.push({userName: x.userName, message: '', Date: ''});
+            this.users.push({userName: x.userName, message: '', Date: '', last_date: ''});
             this.getLastMessage(x.userName);
           });
         }
@@ -84,14 +85,21 @@ export class ChatComponent implements OnInit {
   getLastMessage(userName) {
     this.userService.findMessage(this.userName, userName)
       .subscribe((res) => {
-        if (res.length > 0) {
+        if (res.data.length > 0) {
           (this.users).forEach((x) => {
             if (x.userName.toString() === userName.toString()) {
-              x.message = res[res.length - 1].msg;
-              x.Date = res[res.length - 1].date;
+              x.message = res.data[res.data.length - 1].msg;
+              x.Date = res.data[res.data.length - 1].date;
+              x.last_date = res.data[res.data.length - 1].created_at;
+              x.counter = 0;
             }
           });
+          (this.users).sort(function (a, b) {
+            return new Date(b.last_date).getTime() - new Date(a.last_date).getTime();
+          });
         }
+      }, (err) => {
+        console.log('err', err);
       });
   }
 
@@ -118,6 +126,7 @@ export class ChatComponent implements OnInit {
             console.log(res.data[res.data.length], res.data.length);
             if (res.data.length > 0) {
               x.message = res.data[res.data.length - 1].msg;
+              x.counter = 0;
             }
           }
         });
@@ -144,7 +153,7 @@ export class ChatComponent implements OnInit {
         .subscribe((res) => {
           console.log('resssssss', res);
           const data = {
-            msg: res.msg,
+            msg: res.data.msg,
             nick: this.userName,
             flag: false,
             date: that.formatDate(currentDate),
@@ -155,6 +164,7 @@ export class ChatComponent implements OnInit {
             if (x.userName.toString() === this.selectUser.toString()) {
               console.log(res[res.length], res.length);
               x.message = data.msg;
+              x.counter = 0;
             }
           });
         }, (err) => {

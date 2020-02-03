@@ -142,7 +142,7 @@ global.io = io;
 const middleware = require('./app/middlewares/auth');
 
 io.on('connection', function (socket) {
-  console.log('client connected');
+  console.log('client connected', socket.id);
   app.io = io;
   app.socket = socket;
 
@@ -150,22 +150,6 @@ io.on('connection', function (socket) {
     console.log("Pong received from client");
   });
   setTimeout(sendHeartbeat, 10000);
-
-  /*socket.on('new user', function (data, callback) {
-    middleware.newUserLogin(socket, data, callback)
-  });*/
-  /*socket.on('getOnlineUser', function (name, callback) {
-    middleware.listofalluser(name, callback)
-  });
-  socket.on('find message', function (name) {
-    middleware.findUserMessage(socket, name)
-  });
-  socket.on('logout', function (data, cb) {
-    middleware.disconnectUser(socket, data, cb)
-  });
-  socket.on('sendMessage', function (data, callback) {
-    middleware.sendingMessage(socket, data, callback)
-  });*/
 
   function sendHeartbeat() {
     setTimeout(sendHeartbeat, 10000);

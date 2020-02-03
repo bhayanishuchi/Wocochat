@@ -11,6 +11,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {JwtInterceptor} from "../../_helpers/jwt.interceptor";
 import {ChatComponent} from '../../pages/chat/chat.component';
+import {FilterPipe} from "../../service/filter.pipe";
 
 @NgModule({
   imports: [
@@ -22,6 +23,7 @@ import {ChatComponent} from '../../pages/chat/chat.component';
   declarations: [
     DashboardComponent,
     ChatComponent,
+    FilterPipe
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true}

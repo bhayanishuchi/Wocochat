@@ -16,14 +16,20 @@ let allUser = {};
 const setUserPetName = function (req) {
   console.log('==== update Socket start ==== ');
   console.log('setUserPetName ');
-  const socket = req.app.io;
+  const socket = req.app.socket;
+  const socketApp = req.app.io;
   return new Promise((resolve, reject) => {
-    if (socket !== undefined) {
+    if (socket) {
+      socket.userName = req.body.userName;
+    }
+    if (socketApp !== undefined) {
       if (allUser[req.body.userName] === undefined) {
         allUser[req.body.userName] = req.app.socket.id;
       }
+      console.log('socket.id', socket.id);
+      console.log('socket.userName', socket.userName);
       console.log('allUser', allUser);
-      socket.userName = req.body.userName;
+      socketApp.userName = req.body.userName;
       resolve();
     }
   })
@@ -35,7 +41,9 @@ const notifyUser = function (req) {
   return new Promise((resolve, reject) => {
     if (socket !== undefined) {
       console.log('sseeeeee', allUser[req.body.to]);
-      socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+      if (allUser[req.body.to]) {
+        socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+      }
       resolve();
     }
   })

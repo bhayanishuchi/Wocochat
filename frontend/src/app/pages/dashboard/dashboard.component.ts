@@ -2,6 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {NotificationService} from '../../service/notification.service';
 import {UserService} from '../../service/user.service';
 import {Router} from '@angular/router';
+import {SocketService} from "../../service/socket.service";
+import {Socket} from "ngx-socket-io";
 
 
 @Component({
@@ -18,16 +20,20 @@ export class DashboardComponent implements OnInit {
 
   constructor(private notify: NotificationService,
               private userService: UserService,
+              private socketService: SocketService,
+              private socket: Socket,
               private router: Router) {
   }
 
   ngOnInit() {
     const accessToken = localStorage.getItem('token');
     this.userId = localStorage.getItem('user_id');
-    // console.log('accessToken', accessToken);
     if (!accessToken) {
       this.router.navigate(['/login']);
     }
+    this.socketService.connectionIsAlive(this.socket);
+    this.socketService.yesConnectionIsAlive(this.socket, function (data) {
+    });
     this.getContactBook();
   }
 
