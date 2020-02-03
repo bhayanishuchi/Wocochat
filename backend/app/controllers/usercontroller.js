@@ -47,7 +47,8 @@ const logout = function (req, res) {
   if (socket !== undefined) {
     delete allUser[req.params.userName]
   }
-  res.status(200).send()
+  let apiResponse = response.generate(true, "Logout successfully", 200, []);
+  res.send(apiResponse)
 };
 
 
@@ -416,10 +417,6 @@ let contactbook = (req, res) => {
           logger.error("Internal Server error while create User", "createcontact => getContact()", 5);
           let apiResponse = response.generate(true, err, 500, null);
           reject(apiResponse);
-        } else if (check.isEmpty(ContactBookData)) {
-          logger.error("User does not Exists", "contackbook => getContact()", 5);
-          let apiResponse = response.generate(true, "User does not Exists with this user id", 401, null);
-          reject(apiResponse);
         } else {
           resolve(ContactBookData);
         }
@@ -431,7 +428,8 @@ let contactbook = (req, res) => {
     .then(checkUser)
     .then(getContact)
     .then((resolve) => {
-      res.status(200).send(resolve);
+      let apiResponse = response.generate(true, "Get contact book of user successfully", 200, resolve);
+      res.send(apiResponse);
     })
     .catch((err) => {
       res.status(err.status).send(err);
@@ -494,7 +492,8 @@ let allUsers = (req, res) => {
     .then(checkUser)
     .then(getAllUsers)
     .then((resolve) => {
-      res.status(200).send(resolve);
+      let apiResponse = response.generate(true, "Get all Users successfully", 200, resolve);
+      res.send(apiResponse);
     })
     .catch((err) => {
       res.status(err.status).send(err);
@@ -553,7 +552,8 @@ let userMessage = (req, res) => {
     .then(checkUser)
     .then(getAllMessage)
     .then((resolve) => {
-      res.status(200).send(resolve);
+      let apiResponse = response.generate(true, "Get user messages successfully", 200, resolve);
+      res.send(apiResponse);
     })
     .catch((err) => {
       res.status(err.status).send(err);
@@ -630,7 +630,8 @@ let sendMessage = (req, res) => {
     .then((resolve) => {
       Promise.all([notifyUser(req)])
         .then((data) => {
-          res.status(200).send(resolve);
+          let apiResponse = response.generate(true, "Send messages successfully", 200, resolve);
+          res.send(apiResponse);
         })
     })
     .catch((err) => {

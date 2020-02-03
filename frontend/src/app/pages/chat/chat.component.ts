@@ -18,7 +18,7 @@ export class ChatComponent implements OnInit {
   userId;
   totalFriend;
   users: any = [];
-  selectUser:any = '';
+  selectUser: any = '';
   msgval;
   chatList: any = [];
   userName;
@@ -68,12 +68,14 @@ export class ChatComponent implements OnInit {
 
   getAllUserApi() {
     this.userService.getAllUser(this.userId)
-      .subscribe((data) => {
-        this.totalFriend = data.length;
-        (data).forEach((x) => {
-          this.users.push({userName: x.userName, message: '', Date: ''});
-          this.getLastMessage(x.userName);
-        });
+      .subscribe((res) => {
+        if (res.data) {
+          this.totalFriend = res.data.length;
+          (res.data).forEach((x) => {
+            this.users.push({userName: x.userName, message: '', Date: ''});
+            this.getLastMessage(x.userName);
+          });
+        }
       }, (err) => {
         console.log('err', err);
       });
@@ -101,8 +103,8 @@ export class ChatComponent implements OnInit {
     this.userService.findMessage(this.userName, user.userName)
       .subscribe((res) => {
         console.log('findMessage data', res);
-        (res).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        (res).forEach((x) => {
+        (res.data).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        (res.data).forEach((x) => {
           if (x.nick.toString() === this.userName.toString()) {
             x.flag = false;
           } else {
@@ -110,11 +112,13 @@ export class ChatComponent implements OnInit {
           }
         });
         that.msg = [];
-        that.msg = res;
+        that.msg = res.data;
         (this.users).forEach((x) => {
           if (x.userName.toString() === this.selectUser.toString()) {
-            console.log(res[res.length], res.length);
-            x.message = res[res.length - 1].msg;
+            console.log(res.data[res.data.length], res.data.length);
+            if (res.data.length > 0) {
+              x.message = res.data[res.data.length - 1].msg;
+            }
           }
         });
         console.log('msg', that.msg);

@@ -33,10 +33,16 @@ export class DashboardComponent implements OnInit {
 
   getContactBook() {
     this.userService.getuserContactBook(this.userId)
-      .subscribe((data) => {
-        this.totalFriend = data.numbers.length;
+      .subscribe((res) => {
+        if (res.data) {
+          this.totalFriend = res.data.length;
+        }
       }, (err) => {
         console.log('err', err);
+        if (err.status === 401) {
+          localStorage.clear();
+          this.router.navigate(['/login']);
+        }
       });
   }
 
