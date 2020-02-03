@@ -11,24 +11,23 @@ const ChatMessages = mongoose.model('ChatMessages');
 const tokenCol = mongoose.model('tokenCollection');
 const ContactBook = mongoose.model('ContactBook');
 
-let allUser = {};
-
 const setUserPetName = function (req) {
   console.log('==== update Socket start ==== ');
   console.log('setUserPetName ');
   const socket = req.app.socket;
+  console.log('==============================');
+  console.log(socket.userName, req.app.socket.id);
+  console.log('==============================');
   const socketApp = req.app.io;
   return new Promise((resolve, reject) => {
     if (socket) {
       socket.userName = req.body.userName;
+      socketUser[req.body.userName] = socket;
     }
     if (socketApp !== undefined) {
       if (allUser[req.body.userName] === undefined) {
         allUser[req.body.userName] = req.app.socket.id;
       }
-      console.log('socket.id', socket.id);
-      console.log('socket.userName', socket.userName);
-      console.log('allUser', allUser);
       socketApp.userName = req.body.userName;
       resolve();
     }
@@ -40,9 +39,10 @@ const notifyUser = function (req) {
   const socket = req.app.io;
   return new Promise((resolve, reject) => {
     if (socket !== undefined) {
-      console.log('sseeeeee', allUser[req.body.to]);
-      if (allUser[req.body.to]) {
-        socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+      console.log('sseeeeee', socket[req.body.to]);
+      if (socket.to(req.body.to)) {
+        // socket.to(`${allUser[req.body.to]}`).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
+        socket.to(req.body.to).emit('notification', 'You Got New Message', req.body.userName, req.body.msg);
       }
       resolve();
     }
@@ -53,7 +53,7 @@ const logout = function (req, res) {
   console.log('notifyUser ');
   const socket = req.app.io;
   if (socket !== undefined) {
-    delete allUser[req.params.userName]
+    delete socket[req.params.userName]
   }
   let apiResponse = response.generate(true, "Logout successfully", 200, []);
   res.send(apiResponse)
@@ -282,10 +282,10 @@ let loginUser = (req, res) => {
   validatingInputs()
     .then(checkUser)
     .then((resolve) => {
-      Promise.all([setUserPetName(req)])
-        .then((data) => {
+      // Promise.all([setUserPetName(req)])
+        // .then((data) => {
           res.status(200).send(resolve);
-        });
+        // });
 
     })
     .catch((err) => {

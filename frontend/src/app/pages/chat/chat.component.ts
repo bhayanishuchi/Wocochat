@@ -28,8 +28,8 @@ export class ChatComponent implements OnInit {
 
   constructor(private notify: NotificationService,
               private userService: UserService,
-              private socketService: SocketService,
               private socket: Socket,
+              private socketService: SocketService,
               private router: Router) {
   }
 
@@ -58,6 +58,14 @@ export class ChatComponent implements OnInit {
             x.message = notificationMessage[2].toString();
             x.Date = this.formatDate(new Date());
             x.counter++;
+            this.array_move(this.users, i, 0);
+          }
+        });
+      } else {
+        (this.users).forEach((x, i) => {
+          if (x.userName.toString() === notificationMessage[1].toString()) {
+            x.message = notificationMessage[2].toString();
+            x.Date = this.formatDate(new Date());
             this.array_move(this.users, i, 0);
           }
         });
@@ -123,7 +131,6 @@ export class ChatComponent implements OnInit {
         that.msg = res.data;
         (this.users).forEach((x) => {
           if (x.userName.toString() === this.selectUser.toString()) {
-            console.log(res.data[res.data.length], res.data.length);
             if (res.data.length > 0) {
               x.message = res.data[res.data.length - 1].msg;
               x.counter = 0;
@@ -133,6 +140,13 @@ export class ChatComponent implements OnInit {
         console.log('msg', that.msg);
       }, (err) => {
       });
+  }
+
+  keyDownFunction(e){
+    if(e.keyCode == 13) {
+      this.sendmessage();
+      // rest of your code
+    }
   }
 
   sendmessage() {
@@ -164,8 +178,13 @@ export class ChatComponent implements OnInit {
             if (x.userName.toString() === this.selectUser.toString()) {
               console.log(res[res.length], res.length);
               x.message = data.msg;
+              x.Date = data.date;
+              x.last_date = body.currentDate;
               x.counter = 0;
             }
+          });
+          (this.users).sort(function (a, b) {
+            return new Date(b.last_date).getTime() - new Date(a.last_date).getTime();
           });
         }, (err) => {
           that.notify.showError(err);

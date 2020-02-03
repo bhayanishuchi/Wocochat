@@ -53,8 +53,8 @@ let joinRoom = (req, res, next) => {
   console.log("joinRoom");
   if (req.app.socket) {
     let socket = req.app.socket;
-    console.log('userDetail.customer_id', socket.id, req.user.customer_id);
-    socket.join(req.user.customer_id);
+    console.log('userDetail.customer_id', socket.id, req.user.userName);
+    socket.join(req.user.userName);
     next();
   } else {
     next();

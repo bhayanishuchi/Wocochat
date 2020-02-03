@@ -26,7 +26,6 @@ export class NavbarComponent implements OnInit {
               private renderer: Renderer,
               private element: ElementRef,
               private router: Router,
-              private socketService: SocketService,
               private userService: UserService,
               private socket: Socket) {
     this.location = location;
@@ -36,7 +35,6 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     this.listTitles = ROUTES.filter(listTitle => listTitle);
-    const soc = this.socketService.newconnection();
     var navbar: HTMLElement = this.element.nativeElement;
     this.toggleButton = navbar.getElementsByClassName('navbar-toggle')[0];
     this.router.events.subscribe((event) => {

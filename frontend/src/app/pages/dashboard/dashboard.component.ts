@@ -20,8 +20,8 @@ export class DashboardComponent implements OnInit {
 
   constructor(private notify: NotificationService,
               private userService: UserService,
-              private socketService: SocketService,
               private socket: Socket,
+              private socketService: SocketService,
               private router: Router) {
   }
 

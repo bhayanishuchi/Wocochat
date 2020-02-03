@@ -139,8 +139,6 @@ newserver.listen(3000, () => {
 let io = require('socket.io').listen(newserver);
 global.io = io;
 
-const middleware = require('./app/middlewares/auth');
-
 io.on('connection', function (socket) {
   console.log('client connected', socket.id);
   app.io = io;

@@ -7,16 +7,16 @@
         </div>
         <div class="srch_bar">
           <div class="stylish-input-group">
-            <input type="text" class="search-bar"  placeholder="Search" [(ngModel)]="searchText">
+            <input type="text" class="search-bar" placeholder="Search" [(ngModel)]="searchText">
             <span class="input-group-addon">
                 <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-                </span> </div>
+                </span></div>
         </div>
       </div>
       <div class="inbox_chat">
         <div class="chat_list" *ngFor="let user of users | userName: searchText">
           <div class="chat_people" (click)="selectedUserApi(user)">
-            <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="{{user}}"> </div>
+            <div class="chat_img"><img src="https://ptetutorials.com/images/user-profile.png" alt="{{user}}"></div>
             <div class="chat_ib">
               <h5>{{user.userName}}<span class="chat_date">{{user.Date}}</span></h5>
               <p>{{user.message}}<span *ngIf="user.counter !== 0" class="badge badge-danger">{{user.counter}}</span></p>
@@ -25,8 +25,13 @@
         </div>
       </div>
     </div>
-    <div class="mesgs">
-      <div class="msg_history">
+    <div *ngIf="showChat" style="padding: 10px 29px 10px 20px;overflow: hidden;border-bottom: 1px solid #c4c4c4;">
+      <div class="recent_heading">
+        <h4 style="text-transform: capitalize;">{{selectUser}}</h4>
+      </div>
+    </div>
+    <div class="mesgs" *ngIf="showChat">
+      <div class="msg_history" id="msgContainer">
         <div *ngFor="let m of msg">
           <div *ngIf="m.flag === true">
             <div class="incoming_msg">
@@ -52,7 +57,8 @@
       </div>
       <div class="type_msg">
         <div class="input_msg_write">
-          <input class="write_msg" placeholder="Type a message" id="message" [(ngModel)]="msgval" name="msgval">
+          <input class="write_msg" placeholder="Type a message" id="message" (keydown)="keyDownFunction($event)"
+                 [(ngModel)]="msgval" name="msgval">
           <button class="msg_send_btn" type="submit" (click)="sendmessage()"><i
             class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
         </div>

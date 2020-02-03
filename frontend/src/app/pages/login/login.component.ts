@@ -16,17 +16,11 @@ export class LoginComponent implements OnInit {
 
   constructor(private userService: UserService,
               private notify: NotificationService,
-              private socket: Socket,
-              private socketService: SocketService,
               private router: Router) {
   }
 
   ngOnInit() {
-    const socket = this.socketService.newconnection();
-    this.socketService.connectionIsAlive(socket);
-    this.socketService.yesConnectionIsAlive(socket, function (data) {
-      // console.log('yes Connection Is Alive data', data)
-    });
+
   }
 
   onLogin() {
